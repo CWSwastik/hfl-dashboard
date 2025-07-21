@@ -22,7 +22,14 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadExperiments() {
       try {
-        const res = await fetch("http://localhost:8000/experiments");
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/experiments`,
+          {
+            headers: {
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
         const exps: string[] = await res.json();
         setExpList(exps);
         if (exps.length === 0) return;
@@ -32,9 +39,32 @@ export default function Dashboard() {
         await Promise.all(
           exps.map(async (exp) => {
             const [mRes, metaRes, distRes] = await Promise.all([
-              fetch(`http://localhost:8000/experiment/${exp}/metrics`),
-              fetch(`http://localhost:8000/experiment/${exp}/meta`),
-              fetch(`http://localhost:8000/experiment/${exp}/distributions`),
+              fetch(
+                `${import.meta.env.VITE_BACKEND_URL}/experiment/${exp}/metrics`,
+                {
+                  headers: {
+                    "ngrok-skip-browser-warning": "true",
+                  },
+                }
+              ),
+              fetch(
+                `${import.meta.env.VITE_BACKEND_URL}/experiment/${exp}/meta`,
+                {
+                  headers: {
+                    "ngrok-skip-browser-warning": "true",
+                  },
+                }
+              ),
+              fetch(
+                `${
+                  import.meta.env.VITE_BACKEND_URL
+                }/experiment/${exp}/distributions`,
+                {
+                  headers: {
+                    "ngrok-skip-browser-warning": "true",
+                  },
+                }
+              ),
             ]);
             const [metricsRaw, metadata, distributions] = await Promise.all([
               mRes.json(),
@@ -61,7 +91,9 @@ export default function Dashboard() {
 
   // WebSocket listener once
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8000/ws");
+    const socket = new WebSocket(
+      `${import.meta.env.VITE_BACKEND_URL_WS}?ngrok-skip-browser-warning=true`
+    );
     socket.onmessage = (event) => {
       const msg: Metric = JSON.parse(event.data);
       const existing = dataRef.current[msg.exp_id];

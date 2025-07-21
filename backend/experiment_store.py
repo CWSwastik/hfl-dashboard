@@ -95,5 +95,4 @@ class ExperimentStore:
             raise ValueError(f"Experiment {exp_id} not found")
 
 
-# Usage
 store = ExperimentStore()
