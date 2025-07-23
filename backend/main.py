@@ -45,6 +45,17 @@ async def create_experiment(exp_id: str, request: Request):
         return {"error": str(e)}
 
 
+@app.post("/experiment/{exp_id}/topology")
+async def set_topology(exp_id: str, request: Request):
+    data = await request.json()
+
+    try:
+        store.set_topology(exp_id, data)
+        return {"status": "ok"}
+    except KeyError:
+        return {"error": f"Experiment {exp_id} does not exist"}
+
+
 @app.post("/experiment/{exp_id}/log/{role}")
 async def log_metric(
     exp_id: str,
@@ -100,10 +111,10 @@ def get_metadata(exp_id: str):
         return {"error": str(e)}
 
 
-@app.get("/experiment/{exp_id}/distributions")
-def get_distributions(exp_id: str):
+@app.get("/experiment/{exp_id}/topology")
+def get_topology(exp_id: str):
     try:
-        return store.get_distributions(exp_id)
+        return store.get_topology(exp_id)
     except ValueError as e:
         return {"error": str(e)}
 

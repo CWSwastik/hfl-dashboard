@@ -20,6 +20,7 @@ class ExperimentStore:
             "metrics": defaultdict(
                 lambda: defaultdict(list)
             ),  # role -> device -> list of metrics
+            "topology": None,
         }
 
     def add_distribution(self, exp_id: str, role: str, device: str, distribution: dict):
@@ -30,6 +31,14 @@ class ExperimentStore:
         self._check_exp(exp_id)
         metric["timestamp"] = time.time()
         self.experiments[exp_id]["metrics"][role][device].append(metric)
+
+    def set_topology(self, exp_id: str, topology: dict):
+        self._check_exp(exp_id)
+        self.experiments[exp_id]["topology"] = topology
+
+    def get_topology(self, exp_id: str):
+        self._check_exp(exp_id)
+        return self.experiments[exp_id].get("topology")
 
     def get_all_metrics(self, exp_id: str):
         self._check_exp(exp_id)

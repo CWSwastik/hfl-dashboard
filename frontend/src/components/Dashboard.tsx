@@ -3,12 +3,14 @@ import { useEffect, useState, useRef } from "react";
 import SeriesChart from "./SeriesChart";
 import MetadataPanel from "./MetadataPanel";
 import DistributionsPanel from "./DistributionsPanel";
+import Topology from "./Topology";
 import type { Metric } from "@/types/metric";
 
 interface ExperimentContent {
   metrics: Record<string, Metric[]>;
   metadata: Record<string, any>;
   distributions: Record<string, any>;
+  topology: Record<string, any>;
 }
 
 export default function Dashboard() {
@@ -38,7 +40,7 @@ export default function Dashboard() {
         const map: Record<string, ExperimentContent> = {};
         await Promise.all(
           exps.map(async (exp) => {
-            const [mRes, metaRes, distRes] = await Promise.all([
+            const [mRes, metaRes, distRes, topoRes] = await Promise.all([
               fetch(
                 `${import.meta.env.VITE_BACKEND_URL}/experiment/${exp}/metrics`,
                 {
@@ -65,12 +67,24 @@ export default function Dashboard() {
                   },
                 }
               ),
+              fetch(
+                `${
+                  import.meta.env.VITE_BACKEND_URL
+                }/experiment/${exp}/topology`,
+                {
+                  headers: {
+                    "ngrok-skip-browser-warning": "true",
+                  },
+                }
+              ),
             ]);
-            const [metricsRaw, metadata, distributions] = await Promise.all([
-              mRes.json(),
-              metaRes.json(),
-              distRes.json(),
-            ]);
+            const [metricsRaw, metadata, distributions, topology] =
+              await Promise.all([
+                mRes.json(),
+                metaRes.json(),
+                distRes.json(),
+                topoRes.json(),
+              ]);
             const flatMetrics: Record<string, Metric[]> = {};
             for (const role of Object.keys(metricsRaw)) {
               const devices = (metricsRaw as any)[role];
@@ -78,7 +92,12 @@ export default function Dashboard() {
                 flatMetrics[`${role}-${device}`] = devices[device];
               }
             }
-            map[exp] = { metrics: flatMetrics, metadata, distributions };
+            map[exp] = {
+              metrics: flatMetrics,
+              metadata,
+              distributions,
+              topology,
+            };
           })
         );
         setDataMap(map);
@@ -158,6 +177,11 @@ export default function Dashboard() {
           <DistributionsPanel
             distributions={dataMap[currentExp].distributions as { client: {} }}
           />
+
+          {/* Topology */}
+          {dataMap[currentExp].topology && (
+            <Topology topology={dataMap[currentExp].topology} />
+          )}
 
           {/* Charts Grid */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 p-4">

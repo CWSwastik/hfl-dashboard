@@ -3,14 +3,17 @@ import random
 import time
 from typing import List, Dict
 
+import yaml
+
 BACKEND_URL = "http://localhost:8000"
 EXP_ID = f"test-exp-{random.randint(1000, 9999)}"
 
-NUM_CLIENTS = 4
-CLIENTS_PER_EDGE = 2
+NUM_CLIENTS = 8
+CLIENTS_PER_EDGE = 4
 ROUNDS = 10
 
 clients = [f"Client-{i}" for i in range(NUM_CLIENTS)]
+
 edges = [f"Edge-{i}" for i in range(NUM_CLIENTS // CLIENTS_PER_EDGE)]
 
 
@@ -111,6 +114,17 @@ def create_experiment():
                 print(f"Error posting distribution for {client}: {res.text}")
         except Exception as e:
             print(f"Failed to post distribution for {client}: {e}")
+
+    url = f"{BACKEND_URL}/experiment/{EXP_ID}/topology"
+    with open("topo.yml", "r") as f:
+        topology = yaml.safe_load(f)
+
+    try:
+        res = requests.post(url, json=topology)
+        if res.status_code != 200:
+            print(f"Error setting topology: {res.text}")
+    except Exception as e:
+        print(f"Failed to set topology: {e}")
 
 
 def simulate_hfl():
