@@ -140,12 +140,21 @@ export default function Dashboard() {
     return () => socket.close();
   }, []);
 
-  const roleOrder: Record<string, number> = { central: 0, edge: 1, client: 2 };
-  const sortedMetrics = (exp: string) => {
-    const content = dataMap[exp];
-    return Object.entries(content.metrics).sort(
-      ([a], [b]) => roleOrder[a.split("-")[0]] - roleOrder[b.split("-")[0]]
-    );
+  // const roleOrder: Record<string, number> = { central: 0, edge: 1, client: 2 };
+  // const sortedMetrics = (exp: string) => {
+  //   const content = dataMap[exp];
+  //   return Object.entries(content.metrics).sort(
+  //     ([a], [b]) => roleOrder[a.split("-")[0]] - roleOrder[b.split("-")[0]]
+  //   );
+  // };
+
+  const groupedMetrics = (exp: string) => {
+    const content = dataMap[exp]?.metrics || {};
+    const entries = Object.entries(content);
+    const central = entries.filter(([key]) => key.startsWith("central-"));
+    const edge = entries.filter(([key]) => key.startsWith("edge-"));
+    const clients = entries.filter(([key]) => key.startsWith("client-"));
+    return { central, edge, clients };
   };
 
   return (
@@ -183,11 +192,37 @@ export default function Dashboard() {
             <Topology topology={dataMap[currentExp].topology} />
           )}
 
-          {/* Charts Grid */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 p-4">
-            {sortedMetrics(currentExp).map(([key, metrics]) => (
-              <SeriesChart key={key} title={key} data={metrics} />
-            ))}
+          {/* Charts Sections */}
+          <div className="p-4 space-y-8">
+            {/* Central Server */}
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Central Server</h2>
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {groupedMetrics(currentExp).central.map(([key, metrics]) => (
+                  <SeriesChart key={key} title={key} data={metrics} />
+                ))}
+              </div>
+            </div>
+
+            {/* Edge Servers */}
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Edge Servers</h2>
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {groupedMetrics(currentExp).edge.map(([key, metrics]) => (
+                  <SeriesChart key={key} title={key} data={metrics} />
+                ))}
+              </div>
+            </div>
+
+            {/* Clients */}
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Clients</h2>
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {groupedMetrics(currentExp).clients.map(([key, metrics]) => (
+                  <SeriesChart key={key} title={key} data={metrics} />
+                ))}
+              </div>
+            </div>
           </div>
         </>
       )}
